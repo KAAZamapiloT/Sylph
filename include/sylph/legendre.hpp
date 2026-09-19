@@ -55,7 +55,7 @@ constexpr double pi = std::numbers::pi_v<double>;
                             * coefficient;
                 }
 
-                return factor * result;
+                return ((m%2==0)?1:-1)*factor * result;
     }
     double factorial_ratio(int lo, int hi) {
         double result = 1.0;

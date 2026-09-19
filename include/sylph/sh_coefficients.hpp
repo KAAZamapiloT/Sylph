@@ -8,14 +8,42 @@
 namespace sylph{
 
 
-    class SHCoefficients{
+    class SHCoefficients  {
        public:
-        explicit SHCoefficients(int lmax){
+        explicit SHCoefficients(int order):order_(order),data_((order + 1) * (order + 1), 0.0){
 
         }
+    double& operator()(int l, int m) {
+        validate(l, m);
+        return data_[index(l, m)];
+    }
 
+    double operator()(int l, int m) const {
+        validate(l, m);
+        return data_[index(l, m)];
+    }
+
+    int order() const {
+        return order_;
+    }
+
+    static constexpr int index(int l, int m) {
+        return l * l + l + m;
+    }
+
+    static constexpr int size_for(int order) {
+        return (order + 1) * (order + 1);
+    }
 
         private:
+        int order_;
+    std::vector<double> data_;
+
+    void validate(int l, int m) const {
+        if (l < 0 || l > order_ || std::abs(m) > l) {
+            throw std::out_of_range("Invalid (l,m)");
+        }
+    }
     
     };
 }
