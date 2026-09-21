@@ -51,7 +51,6 @@ add_library(SDL3::SDL3 SHARED IMPORTED GLOBAL)
 set_target_properties(
     SDL3::SDL3
     PROPERTIES
-
         INTERFACE_INCLUDE_DIRECTORIES
             "${SDL3_INCLUDE_DIR}"
 
@@ -116,7 +115,6 @@ add_library(SyplhRenderer STATIC
     ${CMAKE_SOURCE_DIR}/src/render/transform.cpp
     ${CMAKE_SOURCE_DIR}/src/render/mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/render/shader.cpp
-    ${CMAKE_SOURCE_DIR}/src/render/material.cpp
     ${CMAKE_SOURCE_DIR}/src/render/renderer.cpp
 )
 

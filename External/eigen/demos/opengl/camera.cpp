@@ -13,6 +13,7 @@
 #include <GL/glu.h>
 
 #include "Eigen/LU"
+#include "camera.hpp"
 using namespace Eigen;
 
 Camera::Camera() : mViewIsUptodate(false), mProjIsUptodate(false) {
@@ -28,6 +29,7 @@ Camera::Camera() : mViewIsUptodate(false), mProjIsUptodate(false) {
   setPosition(Vector3f::Constant(100.));
   setTarget(Vector3f::Zero());
 }
+
 
 Camera& Camera::operator=(const Camera& other) {
   mViewIsUptodate = false;
