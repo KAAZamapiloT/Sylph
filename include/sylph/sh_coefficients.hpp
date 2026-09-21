@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <vector>
 
-
+#include<types/constants.hpp>
 
 namespace sylph{
 
@@ -32,7 +32,7 @@ namespace sylph{
     }
 
     static constexpr int size_for(int order) {
-        return (order + 1) * (order + 1);
+        return (order) * (order);
     }
 
         private:

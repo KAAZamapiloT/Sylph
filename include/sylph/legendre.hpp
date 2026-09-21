@@ -1,15 +1,14 @@
+#pragma once
 #include "iostream"
-
 #include <cmath>
 #include <numbers>
 #include <stdexcept>
-
-
+#include<types/constants.hpp>
 namespace sylph {
-constexpr double pi = std::numbers::pi_v<double>;
+
     class Legendre {
     public:
-        double sh(int l, int m, double theta, double phi){
+        double sh(int l, int m, double theta, double phi)const{
             if(m==0){
                  return Nl(0, l) * Pl(0, l, std::cos(theta));
             }else if(m>0){
@@ -19,29 +18,38 @@ constexpr double pi = std::numbers::pi_v<double>;
             }
              return 0.0;
         }
+
+double associated(int l, int m, double x) const{
+return Pl(m,l,x);
+}
+    double normalization(int l, int m)const {
+        return Nl(m,l);
+    }
     private:
 
-    double Nl(int m,int l){
-        double A = (2.0 * l + 1.0) / (4.0 * pi);
-        double B = factorial_ratio(l - m, l + m);
-        double C=std::sqrt(A*B);
-        return ((m%2==0)?1:-1)*C;
-    }
 
-    double Pl(int m, int l, double x){
-        const double factor =
+   double Nl(int m, int l)const
+{
+    double A = (2.0 * l + 1.0) / (4.0 * pi);
+    double B = factorial_ratio(l - m, l + m);
+
+    return std::sqrt(A * B);
+}
+
+    double Pl(int m, int l, double x) const {
+         double factor =
                     std::pow(1.0 - x * x, 0.5 * m);
 
-                const int lim = (l - m) / 2;
+                 int lim = (l - m) / 2;
 
                 double result = 0.0;
 
                 for (int k = 0; k <= lim; ++k) {
 
-                    const double power =
+                     double power =
                         std::pow(x, l - 2 * k - m);
 
-                    const double coefficient =
+                     double coefficient =
                         std::tgamma(2 * l - 2 * k + 1.0) /
                         (
                             std::pow(2.0, l)
@@ -57,7 +65,7 @@ constexpr double pi = std::numbers::pi_v<double>;
 
                 return ((m%2==0)?1:-1)*factor * result;
     }
-    double factorial_ratio(int lo, int hi) {
+    double factorial_ratio(int lo, int hi)const {
         double result = 1.0;
         for (int i = lo + 1; i <= hi; ++i)
             result /= i;
