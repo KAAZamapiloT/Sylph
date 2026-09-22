@@ -1,56 +1,81 @@
 #pragma once
-#include<Eigen/Dense>
-#include<Eigen/Geometry>
 
-namespace render{
+#include <Eigen/Dense>
 
-    class Camera{
+namespace render
+{
 
-        public:
-        Camera();
+class Camera
+{
+public:
+    Camera();
 
-        void set_position(const Eigen::Vector3f&position);
+    // ------------------------------------------------------------
+    // Position / orientation
+    // ------------------------------------------------------------
 
-        const Eigen::Vector3f& position() const;
+    [[nodiscard]] const Eigen::Vector3f& position() const noexcept;
+    [[nodiscard]] const Eigen::Vector3f& forward() const noexcept;
+    [[nodiscard]] const Eigen::Vector3f& right() const noexcept;
+    [[nodiscard]] const Eigen::Vector3f& up() const noexcept;
 
-        void set_orientation(const Eigen::Quaternionf&orientation);
-        const Eigen::Quaternionf&orientation() const;
+    void set_position(const Eigen::Vector3f& position);
+    void set_aspect_ratio(float aspect_ratio);
 
-        void set_fov_y(float radians);
-        float fov_y() const;
+    // Move in WORLD space.
+    void translate(const Eigen::Vector3f& delta);
 
-        void set_aspect(float aspect);
-        float aspect() const;
+    // Move relative to the camera basis.
+    // local.x = right, local.y = up, local.z = forward.
+    void move_local(const Eigen::Vector3f& local_delta);
 
-        void set_near_plane(float near_plane);
-        float near_plane() const ;
+    // Angles are in radians.
+    // pitch_delta -> look up/down
+    // yaw_delta   -> look left/right
+    // roll_delta  -> reserved for future camera roll support
+    void rotate(float pitch_delta, float yaw_delta, float roll_delta = 0.0f);
 
-        void set_far_plane(float far_plane);
-        float far_plane() const;
+    // Compatibility with the older camera example.
+    void Translate(const Eigen::Vector3f& delta);
+    void Rotate(float pitch_delta, float yaw_delta, float roll_delta = 0.0f);
 
-        const Eigen::Matrix4f& view_matrix() const;
-        const Eigen::Matrix4f& projection_matrix() const;
-        const Eigen::Matrix4f& view_projection_matrix() const;
+    void reset();
 
-        private:
-    void update_view() const;
-    void update_projection() const;
-    void update_view_projection() const;
+    // ------------------------------------------------------------
+    // Projection settings
+    // ------------------------------------------------------------
 
-    private:
+    void set_fov_degrees(float fov_degrees);
+    void set_clip_planes(float near_plane, float far_plane);
+
+    [[nodiscard]] float fov_degrees() const noexcept;
+    [[nodiscard]] float aspect_ratio() const noexcept;
+
+    // ------------------------------------------------------------
+    // Matrices consumed by Renderer
+    // ------------------------------------------------------------
+
+    [[nodiscard]] Eigen::Matrix4f view_matrix() const;
+    [[nodiscard]] Eigen::Matrix4f projection_matrix() const;
+
+private:
+    void rebuild_basis();
+
+private:
     Eigen::Vector3f position_;
-    Eigen::Quaternionf orientation_;
+    Eigen::Vector3f forward_;
+    Eigen::Vector3f right_;
+    Eigen::Vector3f up_;
+    Eigen::Vector3f world_up_;
 
-    float fov_y_;
-    float aspect_;
+    // Camera orientation in radians.
+    float yaw_;
+    float pitch_;
+
+    float fov_degrees_;
+    float aspect_ratio_;
     float near_plane_;
     float far_plane_;
+};
 
-    mutable Eigen::Matrix4f view_;
-    mutable Eigen::Matrix4f projection_;
-    mutable Eigen::Matrix4f view_projection_;
-
-    mutable bool view_dirty_;
-    mutable bool projection_dirty_;
-    };
-}
+} // namespace render

@@ -10,7 +10,7 @@ namespace sylph{
 
     class SHCoefficients  {
        public:
-        explicit SHCoefficients(int order):order_(order),data_((order + 1) * (order + 1), 0.0){
+        explicit SHCoefficients(int order):order_(order),data_((order) * (order), 0.0){
 
         }
     double& operator()(int l, int m) {

@@ -222,11 +222,9 @@ SHCoefficients product(
                 "1 <= output_order <= full product order"
             );
         }
-        const int nTheta =
-            (full_order + output_order) / 2;
-
-        const int nPhi =
-            full_order + output_order - 1;
+        const int tt=full_order + output_order-1;
+        const int nTheta = (tt + 1) / 2;
+        const int nPhi   = tt;
 
     
 

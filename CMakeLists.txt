@@ -111,17 +111,33 @@ target_link_libraries(
 
 add_library(SyplhRenderer STATIC
 
+    # Core renderer
     ${CMAKE_SOURCE_DIR}/src/render/camera.cpp
     ${CMAKE_SOURCE_DIR}/src/render/transform.cpp
     ${CMAKE_SOURCE_DIR}/src/render/mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/render/shader.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/material.cpp
     ${CMAKE_SOURCE_DIR}/src/render/renderer.cpp
+
+    # SH rendering
+    ${CMAKE_SOURCE_DIR}/src/render/sh_rendering.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/lighting.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/enviroment.cpp
+
+    # SH rendering applications
+    ${CMAKE_SOURCE_DIR}/src/render/glossy_relighting.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/oof.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/shadow_field.cpp
+
+       ${CMAKE_SOURCE_DIR}/src/render/obj_loader.cpp
+
 )
 
 target_include_directories(
     SyplhRenderer
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/external/tinyobjloader
 )
 
 target_link_libraries(
@@ -139,7 +155,17 @@ target_link_libraries(
 
 add_executable(
     syplh_demo
+
     examples/main.cpp
+
+    # Test runner
+    tests/render_tests.cpp
+)
+
+target_include_directories(
+    syplh_demo
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/tests
 )
 
 target_link_libraries(
