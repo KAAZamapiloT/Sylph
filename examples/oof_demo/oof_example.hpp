@@ -2,6 +2,7 @@
 #define SYLPH_EXAMPLES_OOF_EXAMPLE_HPP
 
 #include "render/camera_controller.hpp"
+#include "render/renderer.hpp"
 #include "render/shader.hpp"
 #include "render/lighting.hpp"
 #include "render/color_mesh.hpp"
@@ -22,7 +23,7 @@ public:
 
     void process_event(const SDL_Event& event, SDL_Window* window);
     void update(float delta_time);
-    void render();
+    void render(render::Renderer& renderer);
     void resize(int width, int height);
 
 private:
@@ -33,9 +34,16 @@ private:
     
     render::Shader shader_;
     render::Lighting lighting_;
+    // Environment
+    struct SceneObject {
+        std::shared_ptr<render::Mesh> mesh;
+        render::Transform transform;
+        Eigen::Vector3f base_color;
+    };
+    std::vector<SceneObject> house_objects_;
     
     // Dynamic Occluder
-    std::shared_ptr<render::ColorMesh> occluder_mesh_;
+    std::shared_ptr<render::Mesh> occluder_mesh_;
     render::Transform occluder_transform_;
     std::unique_ptr<render::OOF> occluder_oof_;
     

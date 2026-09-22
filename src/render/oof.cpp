@@ -116,18 +116,60 @@ const Visibility& OOF::at(
     return cells_[index(x, y, z)];
 }
 
-const Visibility& OOF::lookup(
+const Visibility OOF::lookup(
     const Eigen::Vector3f& position
 ) const
 {
-    const Eigen::Vector3i cell =
-        position_to_cell(position);
-
-    return at(
-        cell.x(),
-        cell.y(),
-        cell.z()
+    Eigen::Vector3f normalized = (position - min_).cwiseQuotient(max_ - min_);
+    normalized = normalized.cwiseMax(0.0f).cwiseMin(1.0f);
+    
+    Eigen::Vector3f scaled = normalized.cwiseProduct(
+        Eigen::Vector3f(
+            static_cast<float>(resolution_x_ - 1),
+            static_cast<float>(resolution_y_ - 1),
+            static_cast<float>(resolution_z_ - 1)
+        )
     );
+    
+    int x0 = static_cast<int>(std::floor(scaled.x()));
+    int y0 = static_cast<int>(std::floor(scaled.y()));
+    int z0 = static_cast<int>(std::floor(scaled.z()));
+    
+    int x1 = std::min(x0 + 1, resolution_x_ - 1);
+    int y1 = std::min(y0 + 1, resolution_y_ - 1);
+    int z1 = std::min(z0 + 1, resolution_z_ - 1);
+    
+    float tx = scaled.x() - x0;
+    float ty = scaled.y() - y0;
+    float tz = scaled.z() - z0;
+    
+    const Visibility& v000 = at(x0, y0, z0);
+    const Visibility& v100 = at(x1, y0, z0);
+    const Visibility& v010 = at(x0, y1, z0);
+    const Visibility& v110 = at(x1, y1, z0);
+    const Visibility& v001 = at(x0, y0, z1);
+    const Visibility& v101 = at(x1, y0, z1);
+    const Visibility& v011 = at(x0, y1, z1);
+    const Visibility& v111 = at(x1, y1, z1);
+    
+    Visibility result(visibility_order_);
+    
+    // Trilinear interpolation of SH coefficients
+    for (int l = 0; l < visibility_order_; ++l) {
+        for (int m = -l; m <= l; ++m) {
+            float c00 = v000.coefficients()(l, m) * (1 - tx) + v100.coefficients()(l, m) * tx;
+            float c10 = v010.coefficients()(l, m) * (1 - tx) + v110.coefficients()(l, m) * tx;
+            float c01 = v001.coefficients()(l, m) * (1 - tx) + v101.coefficients()(l, m) * tx;
+            float c11 = v011.coefficients()(l, m) * (1 - tx) + v111.coefficients()(l, m) * tx;
+            
+            float c0 = c00 * (1 - ty) + c10 * ty;
+            float c1 = c01 * (1 - ty) + c11 * ty;
+            
+            result.coefficients()(l, m) = c0 * (1 - tz) + c1 * tz;
+        }
+    }
+    
+    return result;
 }
 
 std::size_t OOF::index(

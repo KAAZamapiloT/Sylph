@@ -16,6 +16,8 @@ uniform float uBrdfZH[8];
 uniform int uTParam; // 1 to 8
 uniform int uGridSize; // current active grid size
 
+uniform vec3 uBaseColor = vec3(1.0, 1.0, 1.0);
+
 out vec4 FragColor;
 
 /*
@@ -94,6 +96,9 @@ void main()
         }
     }
     // The integral over the sphere provides the final color (DC component extraction)
+    
+    // Multiply by the base color of the object
+    color *= uBaseColor;
     
     // Simple ACES tonemapping
     float a = 2.51; float b = 0.03; float c = 2.43; float d = 0.59; float e = 0.14;

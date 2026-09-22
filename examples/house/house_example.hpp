@@ -81,10 +81,16 @@ private:
     render::Shader shader_;
 
     struct SceneObject {
-        std::shared_ptr<render::ColorMesh> mesh;
+        std::shared_ptr<render::Mesh> mesh;
         render::Transform transform;
-        float roughness;
-        sylph::SHCoefficients base_brdf{8};
+        float roughness = 1.0f;
+        Eigen::Vector3f base_color = Eigen::Vector3f(1.0f, 1.0f, 1.0f);
+        
+        double base_brdf(int l, int m) const {
+            if (m != 0) return 0.0;
+            double factor = std::exp(-roughness * l * (l + 1));
+            return factor * std::sqrt((2 * l + 1) / (4.0 * std::numbers::pi_v<double>));
+        }
     };
     std::vector<SceneObject> objects_;
 

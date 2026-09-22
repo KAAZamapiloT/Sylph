@@ -135,7 +135,7 @@ int main()
     // Example
     // --------------------------------------------------------
 
-    examples::HouseExample example(
+    examples::OofExample example(
         WINDOW_WIDTH,
         WINDOW_HEIGHT
     );

@@ -62,7 +62,7 @@ public:
     ) const;
 
     [[nodiscard]]
-    const Visibility& lookup(
+    const Visibility lookup(
         const Eigen::Vector3f& position
     ) const;
 
