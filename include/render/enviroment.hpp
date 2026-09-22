@@ -1,3 +1,11 @@
+/**
+ * @file enviroment.hpp
+ * @brief Manages the global Environment (Skybox and Lighting).
+ * 
+ * Handles loading high-dynamic-range (HDR) cubemaps and projecting the incoming 
+ * radiance into Spherical Harmonic coefficients (Lighting) to be used by the PRT 
+ * rendering equations.
+ */
 #pragma once
 
 #include "render/lighting.hpp"

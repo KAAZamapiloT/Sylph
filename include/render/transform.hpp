@@ -1,3 +1,11 @@
+/**
+ * @file transform.hpp
+ * @brief 3D Spatial Transform representation.
+ * 
+ * Stores the Position, Rotation (as a Quaternion), and Scale of an object. 
+ * Provides methods to construct the final 4x4 Model Matrix used to move the 
+ * object in the scene.
+ */
 #pragma once
 
 #include <Eigen/Dense>

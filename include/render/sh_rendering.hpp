@@ -1,3 +1,10 @@
+/**
+ * @file sh_rendering.hpp
+ * @brief High-level Rendering logic for SH-based objects.
+ * 
+ * Handles the specific shader setups and rendering passes required to draw PRT meshes 
+ * and SH Lobes, abstracting the complex uniform bindings away from the main loop.
+ */
 #pragma once
 
 #include "render/lighting.hpp"

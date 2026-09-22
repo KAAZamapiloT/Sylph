@@ -1,3 +1,11 @@
+/**
+ * @file shadow_field.hpp
+ * @brief Implementation of Shadow Fields (Section 7.3.2 of the paper).
+ * 
+ * Evaluates the N-way Multiple Product Integral of SH functions. Used to combine 
+ * Incident Lighting, Self-Visibility, and multiple Object Occlusion Fields (OOFs) 
+ * to cast mathematically accurate soft shadows between dynamic objects.
+ */
 #pragma once
 
 #include "render/lighting.hpp"

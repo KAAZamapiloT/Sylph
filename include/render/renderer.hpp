@@ -1,3 +1,11 @@
+/**
+ * @file renderer.hpp
+ * @brief Core OpenGL Rendering Pipeline.
+ * 
+ * Manages the global OpenGL state, issues draw calls for meshes, and handles 
+ * the binding of shaders and uniforms. Acts as the primary bridge between the 
+ * scene data and the GPU.
+ */
 #pragma once
 
 #include <Eigen/Dense>

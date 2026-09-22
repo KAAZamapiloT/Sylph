@@ -1,3 +1,11 @@
+/**
+ * @file mesh_data.hpp
+ * @brief Raw CPU-side geometry data container.
+ * 
+ * Holds the un-uploaded vectors of Vertices and Indices parsed from 3D model files.
+ * This structure allows CPU manipulation (like centering or scaling) before sending
+ * the data to the GPU.
+ */
 #pragma once
 
 #include "render/mesh.hpp"

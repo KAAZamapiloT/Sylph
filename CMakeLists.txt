@@ -127,9 +127,12 @@ add_library(SyplhRenderer STATIC
     # SH rendering applications
     ${CMAKE_SOURCE_DIR}/src/render/glossy_relighting.cpp
     ${CMAKE_SOURCE_DIR}/src/render/oof.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/oof_baker.cpp
     ${CMAKE_SOURCE_DIR}/src/render/shadow_field.cpp
-
-       ${CMAKE_SOURCE_DIR}/src/render/obj_loader.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/sh_lobe_mesh.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/obj_loader.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/color_mesh.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/prt_mesh.cpp
 
 )
 
@@ -160,6 +163,12 @@ add_executable(
 
     # Test runner
     tests/render_tests.cpp
+    #
+    examples/sh_lobe/sh_lobe_example.cpp
+    examples/glossy/glossy_example.cpp
+    examples/gallery/gallery_example.cpp
+    examples/house/house_example.cpp
+    examples/oof_demo/oof_example.cpp
 )
 
 target_include_directories(

@@ -1,3 +1,11 @@
+/**
+ * @file sh_coefficients.hpp
+ * @brief Core Spherical Harmonic Coefficient Data Structure.
+ * 
+ * Stores a vector of SH coefficients up to an arbitrary band limit (order). 
+ * Provides operators for scaling, adding, and managing the memory of the 
+ * frequency-domain data.
+ */
 #pragma once
 #include <cmath>
 #include <stdexcept>

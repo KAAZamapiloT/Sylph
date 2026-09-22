@@ -1,3 +1,11 @@
+/**
+ * @file spherical_harmonics.hpp
+ * @brief Fundamental Spherical Harmonic Basis Evaluator.
+ * 
+ * Evaluates the actual 3D SH basis functions Y_lm(theta, phi) for given directions. 
+ * Handles the complex normalization constants (K_lm) and combinations of Legendre 
+ * polynomials with sine/cosine azimuthal terms.
+ */
 #pragma once
 #include"legendre.hpp"
 

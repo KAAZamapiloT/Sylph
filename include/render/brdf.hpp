@@ -1,3 +1,11 @@
+/**
+ * @file brdf.hpp
+ * @brief Manages the Bidirectional Reflectance Distribution Function (BRDF) data.
+ * 
+ * In this implementation, the BRDF is assumed to be circularly symmetric (e.g., Phong).
+ * This allows it to be represented efficiently using Zonal Harmonics rather than full 
+ * Spherical Harmonics, drastically reducing memory and evaluation costs.
+ */
 #pragma once
 
 #include "sylph/sh_coefficients.hpp"

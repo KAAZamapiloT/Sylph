@@ -1,3 +1,10 @@
+/**
+ * @file mesh.hpp
+ * @brief Standard 3D Mesh wrapper.
+ * 
+ * Manages the OpenGL Vertex Array Objects (VAOs) and Buffers (VBOs) for standard 
+ * geometry (Position, Normal, UV). Used as the base for more complex mesh types.
+ */
 #pragma once
 
 #include <Eigen/Dense>

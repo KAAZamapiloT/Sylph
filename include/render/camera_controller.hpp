@@ -1,3 +1,11 @@
+/**
+ * @file camera_controller.hpp
+ * @brief Interactive First-Person Camera Controller.
+ * 
+ * Captures user input (mouse for look, keyboard for movement) and applies it to 
+ * the Camera object. Supports sprinting, pitch clamping, and smooth movement vectors
+ * for navigating the 3D environment.
+ */
 #pragma once
 
 #include "render/camera.hpp"

@@ -1,3 +1,11 @@
+/**
+ * @file gauss_legendre.hpp
+ * @brief Gauss-Legendre Quadrature Generator.
+ * 
+ * Computes the optimal node angles and weights for integrating functions over a sphere. 
+ * Used heavily by the Spherical Grid algorithm to accurately sum the triple/multiple 
+ * products without losing energy.
+ */
 #pragma once
 
 #include <cmath>

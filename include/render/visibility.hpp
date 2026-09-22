@@ -1,3 +1,11 @@
+/**
+ * @file visibility.hpp
+ * @brief Local Visibility SH Container.
+ * 
+ * Stores the Spherical Harmonic coefficients representing the unblocked directions 
+ * over a hemisphere. Typically used to represent static self-shadowing (Ambient Occlusion)
+ * for a specific vertex or spatial location.
+ */
 #pragma once
 
 #include "sylph/sh_coefficients.hpp"

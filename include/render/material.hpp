@@ -1,3 +1,11 @@
+/**
+ * @file material.hpp
+ * @brief Defines the visual properties of a surface.
+ * 
+ * Contains properties like Albedo and Roughness. The Roughness parameter is used
+ * to generate the Zonal Harmonics for the BRDF, dictating how blurry or sharp 
+ * the reflections appear.
+ */
 #pragma once
 
 #include <Eigen/Dense>

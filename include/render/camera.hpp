@@ -1,3 +1,11 @@
+/**
+ * @file camera.hpp
+ * @brief Core Camera system for rendering the 3D scene.
+ * 
+ * Computes and manages the View and Projection matrices. It provides standard
+ * camera operations like setting the Field of View, clipping planes, and moving 
+ * the camera position in world space.
+ */
 #pragma once
 
 #include <Eigen/Dense>

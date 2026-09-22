@@ -1,3 +1,11 @@
+/**
+ * @file legendre.hpp
+ * @brief Legendre Polynomial mathematics.
+ * 
+ * Provides extremely fast recurrence relations for evaluating Associated and Unassociated 
+ * Legendre polynomials. Critical for evaluating Zonal Harmonics on the GPU without 
+ * expanding the full 3D basis functions.
+ */
 #pragma once
 #include "iostream"
 #include <cmath>

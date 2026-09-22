@@ -1,3 +1,11 @@
+/**
+ * @file spherical_grid.hpp
+ * @brief Spherical Grid mathematical layout.
+ * 
+ * Determines the exact number of Theta and Phi grid points required to accurately 
+ * represent an SH product of order 't'. Generates the 3D directional vectors 
+ * and quadrature weights for each point.
+ */
 #pragma once
 #include <vector>
 #include <cstddef>

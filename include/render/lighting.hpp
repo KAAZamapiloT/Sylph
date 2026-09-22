@@ -1,3 +1,10 @@
+/**
+ * @file lighting.hpp
+ * @brief Container for global illumination Light SH coefficients.
+ * 
+ * Stores the projected low-frequency environment light in Spherical Harmonics. 
+ * Can be updated dynamically to simulate rotating skies or changing time of day.
+ */
 #pragma once
 
 #include "sylph/sh_coefficients.hpp"

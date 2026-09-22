@@ -1,3 +1,10 @@
+/**
+ * @file obj_loader.hpp
+ * @brief Wavefront .obj file parsing utility.
+ * 
+ * Reads 3D model files from disk, extracts vertex positions, normals, and texture 
+ * coordinates, and packs them into the MeshData structure for the engine to use.
+ */
 #pragma once
 
 #include "render/mesh_data.hpp"

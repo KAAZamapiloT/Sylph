@@ -1,3 +1,11 @@
+/**
+ * @file oof.hpp
+ * @brief Object Occlusion Field (OOF) volumetric data structure.
+ * 
+ * Defines a 3D spatial grid wrapped around a dynamic object. Each voxel in the grid 
+ * stores the Spherical Harmonic coefficients of the visibility function, representing 
+ * how much of the sky is blocked by the object from that specific point in space.
+ */
 #pragma once
 
 #include "render/visibility.hpp"

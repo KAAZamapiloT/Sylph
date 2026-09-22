@@ -1,3 +1,11 @@
+/**
+ * @file shader.hpp
+ * @brief OpenGL Shader Program Manager.
+ * 
+ * Handles the compilation of Vertex and Fragment shader strings, linking them 
+ * into a valid GPU program. Provides utility functions for safely uploading 
+ * uniform variables (matrices, floats, vectors) to the GPU.
+ */
 #pragma once
 
 #include <Eigen/Dense>

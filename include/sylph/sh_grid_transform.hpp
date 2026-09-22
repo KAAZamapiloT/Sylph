@@ -1,3 +1,11 @@
+/**
+ * @file sh_grid_transform.hpp
+ * @brief The True Paper Algorithm (SH to Spatial Grid Transform).
+ * 
+ * Transforms SH coefficients back into the spatial domain precisely at the 
+ * Gauss-Legendre quadrature nodes. This allows complex SH products (O(N^5)) 
+ * to be computed as simple point-wise multiplications (O(N^3)).
+ */
 #pragma once
 
 #include "sylph/sh_coefficients.hpp"

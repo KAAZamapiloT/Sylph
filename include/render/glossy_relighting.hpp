@@ -1,3 +1,11 @@
+/**
+ * @file glossy_relighting.hpp
+ * @brief Implementation of Glossy PRT (Section 7.3.1 of the paper).
+ * 
+ * Calculates the Triple Product Integral: Incident Light * Material BRDF * Visibility.
+ * By combining these three Spherical Harmonic functions on the fly, it achieves 
+ * real-time glossy reflections with self-shadowing.
+ */
 #pragma once
 
 #include "render/brdf.hpp"
