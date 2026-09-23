@@ -238,7 +238,7 @@ std::unique_ptr<Mesh>
 SHLobeMesh::build_mesh(
     const sylph::SHCoefficients& coefficients)
 {
-    constexpr int segments = 128;
+    constexpr int segments = 40;
     constexpr int rings = 64;
 
     // -------------------------------------------------------------------------

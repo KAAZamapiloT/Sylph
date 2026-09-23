@@ -171,3 +171,5 @@ Eigen::Vector3f ShadowField::evaluate(
 }
 
 } // namespace render
+
+

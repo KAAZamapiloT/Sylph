@@ -128,6 +128,7 @@ add_library(SyplhRenderer STATIC
     ${CMAKE_SOURCE_DIR}/src/render/glossy_relighting.cpp
     ${CMAKE_SOURCE_DIR}/src/render/oof.cpp
     ${CMAKE_SOURCE_DIR}/src/render/oof_baker.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/prt_baker.cpp
     ${CMAKE_SOURCE_DIR}/src/render/shadow_field.cpp
     ${CMAKE_SOURCE_DIR}/src/render/sh_lobe_mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/render/obj_loader.cpp
@@ -166,8 +167,9 @@ add_executable(
     #
     examples/sh_lobe/sh_lobe_example.cpp
     examples/glossy/glossy_example.cpp
-    examples/gallery/gallery_example.cpp
-    examples/house/house_example.cpp
+    examples/sh_basis/sh_basis_example.cpp
+    examples/shadow/shadow_example.cpp
+    examples/product_demo/product_demo_example.cpp
     examples/oof_demo/oof_example.cpp
 )
 
@@ -236,3 +238,4 @@ add_custom_command(
         "${SDL3_DLL}"
         "$<TARGET_FILE_DIR:syplh_demo>"
 )
+

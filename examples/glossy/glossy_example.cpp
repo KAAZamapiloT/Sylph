@@ -229,6 +229,10 @@ void GlossyExample::resize(int width, int height)
 
 void GlossyExample::render(render::Renderer&)
 {
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     shader_.bind();
     shader_.set_mat4("uModel", transform_.model_matrix());
     shader_.set_mat4("uView", camera_.view_matrix());
@@ -261,3 +265,4 @@ void GlossyExample::render(render::Renderer&)
 }
 
 } // namespace examples
+

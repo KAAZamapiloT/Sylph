@@ -1,248 +1,108 @@
-#include "glossy/glossy_example.hpp"
-#include "gallery/gallery_example.hpp"
-#include "gallery/gallery_example.hpp"
-#include "house/house_example.hpp"
+﻿#include "glossy/glossy_example.hpp"
+#include "sh_lobe/sh_lobe_example.hpp"
+#include "shadow/shadow_example.hpp"
 #include "oof_demo/oof_example.hpp"
+#include "sh_basis/sh_basis_example.hpp"
+#include "product_demo/product_demo_example.hpp"
 
 #include "render/renderer.hpp"
 
 #include <Eigen/Dense>
-
 #include <SDL3/SDL.h>
 #include <glad/gl.h>
 
 #include <cstdlib>
 #include <iostream>
 
-namespace
-{
-
+namespace {
 constexpr int WINDOW_WIDTH  = 1280;
 constexpr int WINDOW_HEIGHT = 720;
-
 }
 
 int main()
 {
-    // --------------------------------------------------------
-    // SDL
-    // --------------------------------------------------------
-
-    if (SDL_Init(SDL_INIT_VIDEO) == 0)
-    {
-        std::cerr << "Failed to initialize SDL: "
-                  << SDL_GetError()
-                  << '\n';
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        std::cerr << "Failed to initialize SDL: " << SDL_GetError() << "\n";
         return EXIT_FAILURE;
     }
 
-    // --------------------------------------------------------
-    // OpenGL context
-    // --------------------------------------------------------
-
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_MAJOR_VERSION,
-        3
-    );
-
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_MINOR_VERSION,
-        3
-    );
-
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_PROFILE_MASK,
-        SDL_GL_CONTEXT_PROFILE_CORE
-    );
-
-    SDL_GL_SetAttribute(
-        SDL_GL_DOUBLEBUFFER,
-        1
-    );
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     SDL_Window* window = SDL_CreateWindow(
-        "Sylph Rendering Engine",
+        "Sylph Demo - SH Basis / Lobe / Glossy / Shadow PRT / OOF",
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
 
-    if (window == nullptr)
-    {
-        std::cerr << "Failed to create SDL window: "
-                  << SDL_GetError()
-                  << '\n';
+    if (!window) {
+        std::cerr << "Failed to create window: " << SDL_GetError() << "\n";
         SDL_Quit();
         return EXIT_FAILURE;
     }
 
-    SDL_GLContext gl_context =
-        SDL_GL_CreateContext(window);
-
-    if (gl_context == nullptr)
-    {
-        std::cerr << "Failed to create OpenGL context: "
-                  << SDL_GetError()
-                  << '\n';
+    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    if (!gl_context) {
+        std::cerr << "Failed to create GL context: " << SDL_GetError() << "\n";
         SDL_DestroyWindow(window);
         SDL_Quit();
-
         return EXIT_FAILURE;
     }
 
-    // --------------------------------------------------------
-    // GLAD
-    // --------------------------------------------------------
-
-    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress))
-    {
+    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
         std::cerr << "Failed to initialize GLAD\n";
-
         SDL_GL_DestroyContext(gl_context);
         SDL_DestroyWindow(window);
         SDL_Quit();
-
         return EXIT_FAILURE;
     }
 
-    if (SDL_GL_SetSwapInterval(1) == 0) {
-        // success
-    } else {
+    if (!SDL_GL_SetSwapInterval(1)) {
         std::cerr << "Warning: Unable to set VSync: " << SDL_GetError() << "\n";
     }
 
-    std::cout
-        << "OpenGL: "
-        << reinterpret_cast<const char*>(
-               glGetString(GL_VERSION)
-           )
-        << '\n';
-
-    // --------------------------------------------------------
-    // Renderer
-    // --------------------------------------------------------
-
-    render::Renderer renderer;
-
-    renderer.initialize();
-
-    renderer.resize(
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT
-    );
-
-    // --------------------------------------------------------
-    // Example
-    // --------------------------------------------------------
-
-    examples::OofExample example(
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT
-    );
-
-    // --------------------------------------------------------
-    // Timing
-    // --------------------------------------------------------
-
-    Uint64 previous =
-        SDL_GetPerformanceCounter();
-
-    const double frequency =
-        static_cast<double>(
-            SDL_GetPerformanceFrequency()
-        );
-
-    // --------------------------------------------------------
-    // Main loop
-    // --------------------------------------------------------
-
-    bool running = true;
-
-    while (running)
     {
-        const Uint64 current =
-            SDL_GetPerformanceCounter();
+        render::Renderer renderer;
 
-        const float dt =
-            static_cast<float>(
-                static_cast<double>(
-                    current - previous
-                ) / frequency
-            );
+        // ==========================================================
+        // DEMO SELECTOR
+        // Change the class name below to run a different demo!
+        // 1. examples::SHBasisExample
+        // 2. examples::SHLobeExample
+        // 3. examples::ProductDemoExample
+        // 4. examples::GlossyExample
+        // 5. examples::ShadowExample
+        // 6. examples::OofExample
+        // ==========================================================
+        examples::GlossyExample example(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        previous = current;
+        bool running = true;
+        Uint64 last_time = SDL_GetPerformanceCounter();
 
-        // ----------------------------------------------------
-        // Events
-        // ----------------------------------------------------
-
-        SDL_Event event;
-
-        while (SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_EVENT_QUIT)
-            {
-                running = false;
-            }
-
-            example.process_event(
-                event,
-                window
-            );
-
-            if (event.type ==
-                SDL_EVENT_WINDOW_RESIZED)
-            {
-                const int width =
-                    event.window.data1;
-
-                const int height =
-                    event.window.data2;
-
-                if (height > 0)
-                {
-                    renderer.resize(
-                        width,
-                        height
-                    );
-
-                    example.resize(
-                        width,
-                        height
-                    );
+        while (running) {
+            SDL_Event event;
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_EVENT_QUIT) {
+                    running = false;
                 }
+                if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+                    example.resize(event.window.data1, event.window.data2);
+                }
+                example.process_event(event, window);
             }
+
+            Uint64 current_time = SDL_GetPerformanceCounter();
+            float dt = static_cast<float>(current_time - last_time) / static_cast<float>(SDL_GetPerformanceFrequency());
+            last_time = current_time;
+
+            example.update(dt);
+            example.render(renderer);
+
+            SDL_GL_SwapWindow(window);
         }
-
-        // ----------------------------------------------------
-        // Update
-        // ----------------------------------------------------
-
-        example.update(dt);
-
-        // ----------------------------------------------------
-        // Render
-        // ----------------------------------------------------
-
-        renderer.begin_frame(
-            Eigen::Vector4f(
-                0.02f,
-                0.02f,
-                0.03f,
-                1.0f
-            )
-        );
-
-        example.render(renderer);
-
-        renderer.end_frame();
-
-        SDL_GL_SwapWindow(window);
     }
-
-    // --------------------------------------------------------
-    // Cleanup
-    // --------------------------------------------------------
 
     SDL_GL_DestroyContext(gl_context);
     SDL_DestroyWindow(window);
@@ -250,3 +110,6 @@ int main()
 
     return EXIT_SUCCESS;
 }
+
+
+

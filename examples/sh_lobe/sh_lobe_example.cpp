@@ -222,10 +222,12 @@ void SHLobeExample::resize(
 }
 
 
-void SHLobeExample::render(
-    render::Renderer& renderer
-)
+void SHLobeExample::render(render::Renderer& renderer)
 {
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     renderer.draw(
         lobe_.mesh(),
         transform_,
