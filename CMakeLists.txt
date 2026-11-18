@@ -171,6 +171,7 @@ add_executable(
     examples/shadow/shadow_example.cpp
     examples/product_demo/product_demo_example.cpp
     examples/oof_demo/oof_example.cpp
+    examples/verification/verification_example.cpp
 )
 
 target_include_directories(
@@ -238,4 +239,5 @@ add_custom_command(
         "${SDL3_DLL}"
         "$<TARGET_FILE_DIR:syplh_demo>"
 )
+
 

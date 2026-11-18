@@ -13,6 +13,7 @@
 #include "sylph/spherical_grid.hpp"
 #include "sylph/legendre.hpp"
 #include "sylph/gauss_legendre.hpp"
+#include "sylph/azimuthal_fft.hpp"
 
 #include <array>
 #include <cmath>
@@ -50,78 +51,20 @@ Spherical_grid  forward(
 }
 
 
-//eq 20 -25
+//eq 20 -25 (FFT azimuthal synthesis)
 Spherical_grid forward_separable(
     const SHCoefficients& coefficients,
     Spherical_grid grid
 ) const {
+    return forward_separable_impl(coefficients, std::move(grid), true);
+}
 
-        const int order=coefficients.order();
-
-        const int mCount=2*order-1;
-          std::vector<double> s(
-        static_cast<std::size_t>(grid.theta_size()) *
-        static_cast<std::size_t>(mCount),
-        0.0
-    );
-
-    auto mIndex=[order](int m){
-        return m+order-1;
-    };
-
-     for (int i = 0; i < grid.theta_size(); ++i) {
-
-        const double theta = grid.theta(i);
-
-        for (int m = -order + 1;
-             m <= order - 1;
-             ++m)
-        {
-            double sum = 0.0;
-
-            for (int l = std::abs(m);
-                 l < order;
-                 ++l)
-            {
-                sum +=
-                    coefficients(l, m) *
-                    C(l, m, theta);
-            }
-
-            s[
-                static_cast<std::size_t>(i) * mCount
-                + mIndex(m)
-            ] = sum;
-        }
-    }
-
-
-    for (int i = 0; i < grid.theta_size(); ++i) {
-
-        for (int j = 0; j < grid.phi_size(); ++j) {
-
-            const double phi = grid.phi(j);
-
-            double value = 0.0;
-
-            for (int m = -order + 1;
-                 m <= order - 1;
-                 ++m)
-            {
-                value +=
-                    R(m, phi) *
-                    s[
-                        static_cast<std::size_t>(i) * mCount
-                        + mIndex(m)
-                    ];
-            }
-
-            grid(i, j) = value;
-        }
-    }
-
-    return grid;
-
+//eq 20 -25 (Direct O(N_theta * N_phi * M) reference)
+Spherical_grid forward_separable_direct(
+    const SHCoefficients& coefficients,
+    Spherical_grid grid
+) const {
+    return forward_separable_impl(coefficients, std::move(grid), false);
 }
 
     SHCoefficients inverse(
@@ -135,7 +78,24 @@ return inverse_impl(
         weights,
         input_order,
         output_order,
+        true,
         true
+    );
+}
+
+    SHCoefficients inverse_direct(
+        const Spherical_grid& grid,
+        const std::vector<double>& weights,
+        int input_order,
+        int output_order
+    ) const{
+return inverse_impl(
+        grid,
+        weights,
+        input_order,
+        output_order,
+        true,
+        false
     );
 }
 
@@ -232,7 +192,9 @@ SHCoefficients product(
         }
         const int tt=full_order + output_order-1;
         const int nTheta = (tt + 1) / 2;
-        const int nPhi   = tt;
+        // Any nPhi >= tt is mathematically exact for trapezoidal azimuthal quadrature;
+        // rounding up to next power of 2 enables the pure Radix-2 Cooley-Tukey fast path.
+        const int nPhi   = AzimuthalFFT::next_pow2(tt);
 
     
 
@@ -258,6 +220,56 @@ SHCoefficients product(
             full_order,
             output_order
         );
+}
+
+SHCoefficients product_direct(
+    std::span<const SHCoefficients* const> inputs,
+    int output_order
+) const {
+    if (inputs.size() < 2) {
+        throw std::invalid_argument("product_direct requires at least two inputs");
+    }
+
+    int full_order = 1;
+    for (const SHCoefficients* input : inputs) {
+        if (input == nullptr) {
+            throw std::invalid_argument("product_direct received null input");
+        }
+        if (input->order() <= 0) {
+            throw std::invalid_argument("all input orders must be positive");
+        }
+        full_order += input->order() - 1;
+    }
+
+    if (output_order <= 0 || output_order > full_order) {
+        throw std::invalid_argument(
+            "output_order must satisfy 1 <= output_order <= full product order"
+        );
+    }
+
+    const int tt = full_order + output_order - 1;
+    const int nTheta = (tt + 1) / 2;
+    const int nPhi   = tt;
+
+    gauss_legendre gl(nTheta);
+    Spherical_grid grid(nTheta, nPhi, gl.nodes());
+
+    Spherical_grid productGrid = forward_separable_direct(*inputs[0], grid);
+    for (std::size_t i = 1; i < inputs.size(); ++i) {
+        const Spherical_grid next = forward_separable_direct(*inputs[i], grid);
+        productGrid.multiply_inplace(next);
+    }
+
+    return inverse_direct(productGrid, gl.weights(), full_order, output_order);
+}
+
+SHCoefficients product_direct(
+    const SHCoefficients& a,
+    const SHCoefficients& b,
+    int output_order
+) const {
+    const std::array<const SHCoefficients*, 2> inputs = { &a, &b };
+    return product_direct(std::span<const SHCoefficients* const>(inputs), output_order);
 }
 
 SHCoefficients product(
@@ -466,12 +478,66 @@ Legendre  L_;
         return std::sqrt(2.0) *
                std::sin(std::abs(m) * phi);
     }
+Spherical_grid forward_separable_impl(
+    const SHCoefficients& coefficients,
+    Spherical_grid grid,
+    bool use_fft
+) const {
+    const int order = coefficients.order();
+    const int mCount = 2 * order - 1;
+
+    std::vector<double> s(
+        static_cast<std::size_t>(grid.theta_size()) *
+        static_cast<std::size_t>(mCount),
+        0.0
+    );
+
+    auto mIndex = [order](int m) {
+        return m + order - 1;
+    };
+
+    // Polar synthesis: sum over l for each (theta_i, m)
+    for (int i = 0; i < grid.theta_size(); ++i) {
+        const double theta = grid.theta(i);
+
+        for (int m = -order + 1; m <= order - 1; ++m) {
+            double sum = 0.0;
+            for (int l = std::abs(m); l < order; ++l) {
+                sum += coefficients(l, m) * C(l, m, theta);
+            }
+            s[static_cast<std::size_t>(i) * static_cast<std::size_t>(mCount)
+              + static_cast<std::size_t>(mIndex(m))] = sum;
+        }
+    }
+
+    // Azimuthal synthesis: sum over m for each (theta_i, phi_j)
+    if (use_fft) {
+        AzimuthalFFT::synthesize_rows(s, order, grid);
+    } else {
+        for (int i = 0; i < grid.theta_size(); ++i) {
+            for (int j = 0; j < grid.phi_size(); ++j) {
+                const double phi = grid.phi(j);
+                double value = 0.0;
+                for (int m = -order + 1; m <= order - 1; ++m) {
+                    value += R(m, phi) *
+                        s[static_cast<std::size_t>(i) * static_cast<std::size_t>(mCount)
+                          + static_cast<std::size_t>(mIndex(m))];
+                }
+                grid(i, j) = value;
+            }
+        }
+    }
+
+    return grid;
+}
+
 SHCoefficients inverse_impl(
     const Spherical_grid& grid,
     const std::vector<double>& weights,
     int input_order,
     int output_order,
-    bool validate_resolution
+    bool validate_resolution,
+    bool use_fft = true
 ) const
 {
     if (input_order <= 0)
@@ -533,65 +599,47 @@ SHCoefficients inverse_impl(
         }
     }
 
-    const int mCount =
-        2 * input_order - 1;
-
-    auto mIndex =
-        [input_order](int m)
-        {
-            return m + input_order - 1;
-        };
-
-    std::vector<double> s(
-        static_cast<std::size_t>(
-            grid.theta_size()
-        ) *
-        static_cast<std::size_t>(
-            mCount
-        ),
-        0.0
-    );
-
-    const double phiOrder =
-        2.0 * pi /
-        static_cast<double>(
-            grid.phi_size()
-        );
-
     // ------------------------------------------------------------
     // Eq. 37: azimuthal projection
     // ------------------------------------------------------------
 
-    for (int i = 0;
-         i < grid.theta_size();
-         ++i)
+    std::vector<double> s;
+    int mCount = 0;
+    int mZero  = 0;
+
+    if (use_fft)
     {
-        for (int m = -input_order + 1;
-             m <= input_order - 1;
-             ++m)
+        mCount = 2 * output_order - 1;
+        mZero  = output_order - 1;
+        AzimuthalFFT::project_rows(grid, output_order, s);
+    }
+    else
+    {
+        mCount = 2 * input_order - 1;
+        mZero  = input_order - 1;
+
+        s.assign(
+            static_cast<std::size_t>(grid.theta_size()) *
+            static_cast<std::size_t>(mCount),
+            0.0
+        );
+
+        const double phiOrder =
+            2.0 * pi / static_cast<double>(grid.phi_size());
+
+        for (int i = 0; i < grid.theta_size(); ++i)
         {
-            double sum = 0.0;
-
-            for (int j = 0;
-                 j < grid.phi_size();
-                 ++j)
+            for (int m = -input_order + 1; m <= input_order - 1; ++m)
             {
-                sum +=
-                    grid(i, j) *
-                    R(
-                        m,
-                        grid.phi(j)
-                    );
-            }
+                double sum = 0.0;
+                for (int j = 0; j < grid.phi_size(); ++j)
+                {
+                    sum += grid(i, j) * R(m, grid.phi(j));
+                }
 
-            s[
-                static_cast<std::size_t>(i) *
-                static_cast<std::size_t>(mCount) +
-                static_cast<std::size_t>(
-                    mIndex(m)
-                )
-            ] =
-                phiOrder * sum;
+                s[static_cast<std::size_t>(i) * static_cast<std::size_t>(mCount) +
+                  static_cast<std::size_t>(m + mZero)] = phiOrder * sum;
+            }
         }
     }
 
@@ -627,9 +675,7 @@ SHCoefficients inverse_impl(
                     s[
                         static_cast<std::size_t>(i) *
                         static_cast<std::size_t>(mCount) +
-                        static_cast<std::size_t>(
-                            mIndex(m)
-                        )
+                        static_cast<std::size_t>(m + mZero)
                     ];
             }
 

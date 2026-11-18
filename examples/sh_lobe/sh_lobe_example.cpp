@@ -1,6 +1,7 @@
 #include "sh_lobe_example.hpp"
 
 #include <iostream>
+#include <cmath>
 
 namespace examples
 {
@@ -64,45 +65,18 @@ void main()
 } // namespace
 
 
-SHLobeExample::SHLobeExample(
-    int width,
-    int height
-)
-    /*
-     * Order 4:
-     *
-     * l = 0
-     * l = 1
-     * l = 2
-     * l = 3
-     */
-    :
-    coefficients_(4),
-    coeff_a_(4),
-    coeff_b_(4),
-
-    lobe_(
-        coefficients_
-    ),
-
-    shader_(
-        VERTEX_SHADER,
-        FRAGMENT_SHADER
-    )
+SHLobeExample::SHLobeExample(int width, int height)
+    : coefficients_(4),
+      coeff_a_(4),
+      coeff_b_(4),
+      lobe_(coefficients_),
+      shader_(VERTEX_SHADER, FRAGMENT_SHADER)
 {
-    // --------------------------------------------------------
-    // Test function: Y_1^0
-    // --------------------------------------------------------
+    std::cout << "SH Lobe Example loaded.\n";
+    std::cout << "Controls: [1] Shape A, [2] Shape B, [3] Product (A x B)\n";
 
+    // Initial coefficient so the lobe is visible
     coefficients_(1, 0) = 1.0;
-
-    /*
-     * IMPORTANT:
-     *
-     * lobe_ was constructed before the coefficient was changed.
-     *
-     * Rebuild after modifying coefficients.
-     */
     lobe_.rebuild(coefficients_);
 
     // --------------------------------------------------------
@@ -110,20 +84,11 @@ SHLobeExample::SHLobeExample(
     // --------------------------------------------------------
 
     camera_.set_position(
-        Eigen::Vector3f(
-            0.0f,
-            0.0f,
-            3.5f
-        )
+        Eigen::Vector3f(0.0f, 0.0f, 3.5f)
     );
 
     camera_.set_fov_degrees(45.0f);
-
-    camera_.set_clip_planes(
-        0.1f,
-        100.0f
-    );
-
+    camera_.set_clip_planes(0.1f, 100.0f);
     resize(width, height);
 
     // --------------------------------------------------------
@@ -139,30 +104,17 @@ SHLobeExample::SHLobeExample(
     // Object
     // --------------------------------------------------------
 
-    transform_.set_position(
-        Eigen::Vector3f::Zero()
-    );
-
-    transform_.set_scale(
-        Eigen::Vector3f::Ones()
-    );
+    transform_.set_position(Eigen::Vector3f::Zero());
+    transform_.set_scale(Eigen::Vector3f::Ones());
 }
 
 
 void SHLobeExample::process_event(
     const SDL_Event& event,
-    SDL_Window* window
-)
+    SDL_Window* window)
 {
-    camera_controller_.process_event(
-        event,
-        window
-    );
-
-    camera_controller_.process_mouse_motion(
-        camera_,
-        event
-    );
+    camera_controller_.process_event(event, window);
+    camera_controller_.process_mouse_motion(camera_, event);
 
     if (event.type == SDL_EVENT_KEY_DOWN) {
         if (event.key.scancode == SDL_SCANCODE_1) current_view_ = 1;
@@ -174,14 +126,8 @@ void SHLobeExample::process_event(
 
 void SHLobeExample::update(float dt)
 {
-    camera_controller_.apply_pending_actions(
-        camera_
-    );
-
-    camera_controller_.update(
-        camera_,
-        dt
-    );
+    camera_controller_.apply_pending_actions(camera_);
+    camera_controller_.update(camera_, dt);
 
     // 1. Animate Shape A over time (Moving Directional Lobe)
     time_ += dt;
@@ -193,10 +139,10 @@ void SHLobeExample::update(float dt)
     coeff_b_(0, 0) = 0.5f; // Base spherical shape
     coeff_b_(2, 0) = 1.0f; // Pinching effect
 
-    // 2. THE PAPER'S ALGORITHM: Multiply A and B
+    // 3. THE PAPER'S ALGORITHM: Multiply A and B
     sylph::SHCoefficients result = sh_transform_.product(coeff_a_, coeff_b_, 4);
 
-    // 3. Rebuild the mesh based on what the user wants to see
+    // 4. Rebuild the mesh based on what the user wants to see
     if (current_view_ == 1) {
         lobe_.rebuild(coeff_a_);
     } else if (current_view_ == 2) {
@@ -207,10 +153,7 @@ void SHLobeExample::update(float dt)
 }
 
 
-void SHLobeExample::resize(
-    int width,
-    int height
-)
+void SHLobeExample::resize(int width, int height)
 {
     if (height <= 0)
         return;
@@ -228,12 +171,13 @@ void SHLobeExample::render(render::Renderer& renderer)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    renderer.draw(
-        lobe_.mesh(),
-        transform_,
-        shader_,
-        camera_
-    );
+
+    shader_.bind();
+    shader_.set_mat4("uModel", transform_.model_matrix());
+    shader_.set_mat4("uView", camera_.view_matrix());
+    shader_.set_mat4("uProjection", camera_.projection_matrix());
+
+    lobe_.mesh().draw();
 }
 
 } // namespace examples

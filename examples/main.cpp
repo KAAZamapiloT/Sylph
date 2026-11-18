@@ -1,7 +1,8 @@
-﻿#include "glossy/glossy_example.hpp"
+#include "glossy/glossy_example.hpp"
 #include "sh_lobe/sh_lobe_example.hpp"
 #include "shadow/shadow_example.hpp"
 #include "oof_demo/oof_example.hpp"
+#include "verification/verification_example.hpp"
 #include "sh_basis/sh_basis_example.hpp"
 #include "product_demo/product_demo_example.hpp"
 
@@ -21,6 +22,7 @@ constexpr int WINDOW_HEIGHT = 720;
 
 int main()
 {
+    try {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "Failed to initialize SDL: " << SDL_GetError() << "\n";
         return EXIT_FAILURE;
@@ -65,6 +67,7 @@ int main()
 
     {
         render::Renderer renderer;
+        renderer.initialize();
 
         // ==========================================================
         // DEMO SELECTOR
@@ -76,7 +79,7 @@ int main()
         // 5. examples::ShadowExample
         // 6. examples::OofExample
         // ==========================================================
-        examples::GlossyExample example(WINDOW_WIDTH, WINDOW_HEIGHT);
+        examples::VerificationExample example(WINDOW_WIDTH, WINDOW_HEIGHT);
 
         bool running = true;
         Uint64 last_time = SDL_GetPerformanceCounter();
@@ -109,7 +112,16 @@ int main()
     SDL_Quit();
 
     return EXIT_SUCCESS;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+        return EXIT_FAILURE;
+    }
 }
+
+
+
+
+
 
 
 
