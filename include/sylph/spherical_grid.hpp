@@ -73,6 +73,14 @@ namespace sylph{
     double operator()(int i, int j) const {
         return values_[index(i, j)];
     }
+
+    const double* data() const noexcept {
+        return values_.data();
+    }
+
+    double* data() noexcept {
+        return values_.data();
+    }
     
     void multiply_inplace(const Spherical_grid& rhs){
         if (theta_size() != rhs.theta_size() ||

@@ -43,12 +43,42 @@ namespace sylph{
         return (order) * (order);
     }
 
+    const double* data() const noexcept {
+        return data_.data();
+    }
+
+    double* data() noexcept {
+        return data_.data();
+    }
+
+    /**
+     * @brief Returns true if all non-zonal coefficients (m != 0) satisfy |c(l,m)| <= eps.
+     *
+     * Exits on the first non-zero m != 0 entry (O(1) for dense general SH functions).
+     */
+    bool is_zonal(double eps = 0.0) const noexcept {
+        for (int l = 1; l < order_; ++l) {
+            const int base = l * l + l;
+            for (int m = -l; m < 0; ++m) {
+                if (std::abs(data_[static_cast<std::size_t>(base + m)]) > eps) {
+                    return false;
+                }
+            }
+            for (int m = 1; m <= l; ++m) {
+                if (std::abs(data_[static_cast<std::size_t>(base + m)]) > eps) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
         private:
         int order_;
     std::vector<double> data_;
 
     void validate(int l, int m) const {
-        if (l < 0 || l > order_ || std::abs(m) > l) {
+        if (l < 0 || l >= order_ || std::abs(m) > l) {
             throw std::out_of_range("Invalid (l,m)");
         }
     }

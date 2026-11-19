@@ -193,8 +193,16 @@ public:
         int output_order,
         std::vector<double>& s
     ) {
-        const int nTheta = grid.theta_size();
-        const int nPhi   = grid.phi_size();
+        project_rows_raw(grid.data(), grid.theta_size(), grid.phi_size(), output_order, s);
+    }
+
+    static void project_rows_raw(
+        const double* grid_vals,
+        int nTheta,
+        int nPhi,
+        int output_order,
+        std::vector<double>& s
+    ) {
         const int mCount = 2 * output_order - 1;
         const int mZero  = output_order - 1;
 
@@ -208,9 +216,10 @@ public:
         // Fast path for DC-only projection (e.g. product_integral where output_order == 1)
         if (output_order == 1) {
             for (int i = 0; i < nTheta; ++i) {
+                const double* g_row = grid_vals + static_cast<std::size_t>(i) * static_cast<std::size_t>(nPhi);
                 double sum = 0.0;
                 for (int j = 0; j < nPhi; ++j) {
-                    sum += grid(i, j);
+                    sum += g_row[j];
                 }
                 s[static_cast<std::size_t>(i)] = phiScale * sum;
             }
@@ -220,28 +229,33 @@ public:
         const Plan& plan = get_plan(nPhi);
         const double sqrt2Scale = phiScale * std::numbers::sqrt2_v<double>;
 
-        std::vector<Complex> buf(static_cast<std::size_t>(nPhi));
-        std::vector<Complex> scratch;
-        if (!plan.is_pow2) {
+        thread_local std::vector<Complex> buf;
+        thread_local std::vector<Complex> scratch;
+        buf.resize(static_cast<std::size_t>(nPhi));
+        if (!plan.is_pow2 && static_cast<int>(scratch.size()) < plan.m) {
             scratch.resize(static_cast<std::size_t>(plan.m));
         }
+
+        Complex* buf_ptr = buf.data();
 
         // Pair two real rows (i0, i1) into z[j] = g_0[j] + i * g_1[j]
         for (int i0 = 0; i0 < nTheta; i0 += 2) {
             const int i1 = i0 + 1;
             const bool has_pair = (i1 < nTheta);
 
+            const double* g0 = grid_vals + static_cast<std::size_t>(i0) * static_cast<std::size_t>(nPhi);
             if (has_pair) {
+                const double* g1 = grid_vals + static_cast<std::size_t>(i1) * static_cast<std::size_t>(nPhi);
                 for (int j = 0; j < nPhi; ++j) {
-                    buf[static_cast<std::size_t>(j)] = Complex(grid(i0, j), grid(i1, j));
+                    buf_ptr[j] = Complex(g0[j], g1[j]);
                 }
             } else {
                 for (int j = 0; j < nPhi; ++j) {
-                    buf[static_cast<std::size_t>(j)] = Complex(grid(i0, j), 0.0);
+                    buf_ptr[j] = Complex(g0[j], 0.0);
                 }
             }
 
-            transform(buf.data(), buf.data(), plan, false, scratch);
+            transform(buf_ptr, buf_ptr, plan, false, scratch);
 
             double* row0 = s.data() + static_cast<std::size_t>(i0) * static_cast<std::size_t>(mCount);
             double* row1 = has_pair
@@ -249,25 +263,18 @@ public:
                 : nullptr;
 
             // m = 0 (DC bin: Z[0] = G0[0] + i * G1[0])
-            row0[mZero] = phiScale * buf[0].real();
+            row0[mZero] = phiScale * buf_ptr[0].real();
             if (has_pair) {
-                row1[mZero] = phiScale * buf[0].imag();
+                row1[mZero] = phiScale * buf_ptr[0].imag();
             }
 
             // m = +/- k for k = 1 .. output_order - 1
-            // Using real-signal conjugate symmetry:
-            //   G0[r] = 0.5 * (Z[r] + conj(Z[r']))
-            //   G1[r] = 0.5 / i * (Z[r] - conj(Z[r']))
-            // where r = k mod nPhi, r' = (nPhi - r) mod nPhi.
-            // Then:
-            //   s[i, +k] = (2*pi / nPhi) * sqrt(2) *  Re(G[r])
-            //   s[i, -k] = (2*pi / nPhi) * sqrt(2) * (-Im(G[r]))
             for (int k = 1; k < output_order; ++k) {
-                const int r = k % nPhi;
+                const int r = (k < nPhi) ? k : (k % nPhi);
                 const int r_conj = (r == 0) ? 0 : (nPhi - r);
 
-                const Complex& zr = buf[static_cast<std::size_t>(r)];
-                const Complex& zc = buf[static_cast<std::size_t>(r_conj)];
+                const Complex& zr = buf_ptr[r];
+                const Complex& zc = buf_ptr[r_conj];
 
                 const double re0 = 0.5 * (zr.real() + zc.real());
                 const double im0 = 0.5 * (zr.imag() - zc.imag());
@@ -300,16 +307,25 @@ public:
         int order,
         Spherical_grid& grid
     ) {
-        const int nTheta = grid.theta_size();
-        const int nPhi   = grid.phi_size();
+        synthesize_rows_raw(s.data(), grid.theta_size(), grid.phi_size(), order, grid.data());
+    }
+
+    static void synthesize_rows_raw(
+        const double* s,
+        int nTheta,
+        int nPhi,
+        int order,
+        double* grid_vals
+    ) {
         const int mCount = 2 * order - 1;
         const int mZero  = order - 1;
 
         if (order == 1) {
             for (int i = 0; i < nTheta; ++i) {
                 const double dc = s[static_cast<std::size_t>(i)];
+                double* g_row = grid_vals + static_cast<std::size_t>(i) * static_cast<std::size_t>(nPhi);
                 for (int j = 0; j < nPhi; ++j) {
-                    grid(i, j) = dc;
+                    g_row[j] = dc;
                 }
             }
             return;
@@ -318,11 +334,14 @@ public:
         const Plan& plan = get_plan(nPhi);
         constexpr double inv_sqrt2 = 1.0 / std::numbers::sqrt2_v<double>;
 
-        std::vector<Complex> spec(static_cast<std::size_t>(nPhi));
-        std::vector<Complex> scratch;
-        if (!plan.is_pow2) {
+        thread_local std::vector<Complex> spec;
+        thread_local std::vector<Complex> scratch;
+        spec.resize(static_cast<std::size_t>(nPhi));
+        if (!plan.is_pow2 && static_cast<int>(scratch.size()) < plan.m) {
             scratch.resize(static_cast<std::size_t>(plan.m));
         }
+
+        Complex* spec_ptr = spec.data();
 
         // Pack two real syntheses into one complex spectrum:
         //   S = S^(i0) + i * S^(i1)
@@ -332,48 +351,50 @@ public:
             const int i1 = i0 + 1;
             const bool has_pair = (i1 < nTheta);
 
-            spec.assign(static_cast<std::size_t>(nPhi), Complex(0.0, 0.0));
+            for (int j = 0; j < nPhi; ++j) {
+                spec_ptr[j] = Complex(0.0, 0.0);
+            }
 
-            const double* row0 = s.data() + static_cast<std::size_t>(i0) * static_cast<std::size_t>(mCount);
-            spec[0] += Complex(row0[mZero], 0.0);
+            const double* row0 = s + static_cast<std::size_t>(i0) * static_cast<std::size_t>(mCount);
+            spec_ptr[0] += Complex(row0[mZero], 0.0);
 
             for (int k = 1; k < order; ++k) {
-                const int r_pos = k % nPhi;
+                const int r_pos = (k < nPhi) ? k : (k % nPhi);
                 const int r_neg = (r_pos == 0) ? 0 : (nPhi - r_pos);
 
                 const double c0 = inv_sqrt2 * row0[mZero + k];
                 const double d0 = inv_sqrt2 * row0[mZero - k];
 
-                spec[static_cast<std::size_t>(r_pos)] += Complex(c0, -d0);
-                spec[static_cast<std::size_t>(r_neg)] += Complex(c0,  d0);
+                spec_ptr[r_pos] += Complex(c0, -d0);
+                spec_ptr[r_neg] += Complex(c0,  d0);
             }
 
             if (has_pair) {
-                const double* row1 = s.data() + static_cast<std::size_t>(i1) * static_cast<std::size_t>(mCount);
-                spec[0] += Complex(0.0, row1[mZero]);
+                const double* row1 = s + static_cast<std::size_t>(i1) * static_cast<std::size_t>(mCount);
+                spec_ptr[0] += Complex(0.0, row1[mZero]);
 
                 for (int k = 1; k < order; ++k) {
-                    const int r_pos = k % nPhi;
+                    const int r_pos = (k < nPhi) ? k : (k % nPhi);
                     const int r_neg = (r_pos == 0) ? 0 : (nPhi - r_pos);
 
                     const double c1 = inv_sqrt2 * row1[mZero + k];
                     const double d1 = inv_sqrt2 * row1[mZero - k];
 
-                    // Multiply (c1 - i*d1) by i -> (d1 + i*c1)
-                    // Multiply (c1 + i*d1) by i -> (-d1 + i*c1)
-                    spec[static_cast<std::size_t>(r_pos)] += Complex( d1, c1);
-                    spec[static_cast<std::size_t>(r_neg)] += Complex(-d1, c1);
+                    spec_ptr[r_pos] += Complex( d1, c1);
+                    spec_ptr[r_neg] += Complex(-d1, c1);
                 }
             }
 
-            transform(spec.data(), spec.data(), plan, true, scratch);
+            transform(spec_ptr, spec_ptr, plan, true, scratch);
 
+            double* g0 = grid_vals + static_cast<std::size_t>(i0) * static_cast<std::size_t>(nPhi);
             for (int j = 0; j < nPhi; ++j) {
-                grid(i0, j) = spec[static_cast<std::size_t>(j)].real();
+                g0[j] = spec_ptr[j].real();
             }
             if (has_pair) {
+                double* g1 = grid_vals + static_cast<std::size_t>(i1) * static_cast<std::size_t>(nPhi);
                 for (int j = 0; j < nPhi; ++j) {
-                    grid(i1, j) = spec[static_cast<std::size_t>(j)].imag();
+                    g1[j] = spec_ptr[j].imag();
                 }
             }
         }
