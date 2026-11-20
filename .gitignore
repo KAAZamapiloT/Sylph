@@ -1,0 +1,147 @@
+# ==============================================================================
+# Sylph Project - Git Ignore Rules
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Build Artifacts, Compilers & Binaries (C++ / MSVC / GCC / Clang / CMake)
+# ------------------------------------------------------------------------------
+build/
+build*/
+out/
+bin/
+lib/
+x64/
+x86/
+arm64/
+[Dd]ebug/
+[Rr]elease/
+RelWithDebInfo/
+MinSizeRel/
+*.dir/
+
+# Compiled object files, binaries, libraries, and debug symbols
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.obj
+*.o
+*.pdb
+*.ilk
+*.exp
+*.idb
+*.bin
+*.pch
+*.gch
+
+# CMake build outputs and caches
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+_CPack_Packages/
+CPackConfig.cmake
+CPackSourceConfig.cmake
+install_manifest.txt
+
+# ------------------------------------------------------------------------------
+# IDE & Editor Configurations
+# ------------------------------------------------------------------------------
+# Visual Studio
+.vs/
+*.sln.docstates
+*.suo
+*.user
+*.vcxproj.user
+*.vcxproj.filters.user
+
+# Visual Studio Code
+.vscode/
+
+# JetBrains CLion / IntelliJ
+.idea/
+cmake-build-*/
+
+# ------------------------------------------------------------------------------
+# Python Vendored Dependencies & Bytecode
+# ------------------------------------------------------------------------------
+vendor/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+dist/
+
+# ------------------------------------------------------------------------------
+# Presentations & PowerPoint Artifacts
+# ------------------------------------------------------------------------------
+PPT/
+ppt/
+*.ppt
+*.pptx
+*.pot
+*.potx
+*.pps
+*.ppsx
+test_card.pptx
+test_deck.pptx
+test_sketch.png
+
+# ------------------------------------------------------------------------------
+# Heavy PDFs, Documentation Dumps & Logs
+# ------------------------------------------------------------------------------
+*.pdf
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+err.txt
+out.txt
+verification_out.txt
+paper_text.txt
+all_slides_dump.txt
+
+# ------------------------------------------------------------------------------
+# Scratchpad Directory (Ignore temporary scripts/dumps, keep tracked sources)
+# ------------------------------------------------------------------------------
+scratch/*
+!scratch/gen_sh.cpp
+
+# ------------------------------------------------------------------------------
+# Large 3D Meshes & Materials (Wavefront OBJ / MTL Assets)
+# ------------------------------------------------------------------------------
+assets/
+*.mtl
+
+# ------------------------------------------------------------------------------
+# Batch Scripts (Local execution helpers)
+# ------------------------------------------------------------------------------
+*.bat
+
+# ------------------------------------------------------------------------------
+# External Subproject Dotfiles
+# ------------------------------------------------------------------------------
+External/**/.gitignore
+
+# ------------------------------------------------------------------------------
+# OS-Generated Metadata
+# ------------------------------------------------------------------------------
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+.DS_Store
+.Spotlight-V100
+.Trashes
